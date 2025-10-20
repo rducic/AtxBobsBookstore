@@ -93,9 +93,10 @@ namespace Bookstore.Web.Startup
                 {
                     Host = dbSecrets.Host,
                     Port = dbSecrets.Port,
-                    Database = "BobsUsedBookStore",
+                    Database = "postgres",
                     Username = dbSecrets.Username,
-                    Password = dbSecrets.Password
+                    Password = dbSecrets.Password,
+                    SearchPath = "bobsusedbookstore_dbo"
                 };
 
                 connString = builder.ConnectionString;
