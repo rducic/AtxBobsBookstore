@@ -161,17 +161,17 @@ namespace Bookstore.Web.Controllers
         {
             try
             {
-                string sql = @"DECLARE @rowsAffected INT;EXEC @rowsAffected = [dbo].[uspUpdateAuthorPersonalInfo] @BusinessEntityID, @NationalIDNumber, @BirthDate, @MaritalStatus, @Gender;SELECT @rowsAffected;";
-
-                var rowsAffected = await _context.Database.ExecuteSqlRawAsync(sql,
-                    new SqlParameter("@BusinessEntityID", businessEntityId),
-                    new SqlParameter("@NationalIDNumber", nationalIdNumber),
-                    new SqlParameter("@BirthDate", birthDate.ToUniversalTime()),
-                    new SqlParameter("@MaritalStatus", maritalStatus),
-                    new SqlParameter("@Gender", gender)
-                    );
-
-                return rowsAffected > 0;
+                var author = await _context.Author.FindAsync(businessEntityId);
+                if (author != null)
+                {
+                    author.NationalIDNumber = nationalIdNumber;
+                    author.BirthDate = birthDate;
+                    author.MaritalStatus = maritalStatus;
+                    author.Gender = gender;
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
             }
             catch (Exception ex)
             {
@@ -184,19 +184,12 @@ namespace Bookstore.Web.Controllers
         {
             try
             {
-                // Build the SQL command
-                string sql = @"SELECT * FROM Author";
-
-                // Execute the SQL command and get the number of rows affected
-                var results = await _context.Database.SqlQueryRaw<Author>(sql).ToListAsync();
-
-                return results;
+                return await _context.Author.ToListAsync();
             }
             catch (Exception ex)
             {
-                // Log the error or handle it as needed
                 Console.WriteLine(ex.ToString());
-                return null;
+                return new List<Author>();
             }
         }
 
@@ -205,17 +198,17 @@ namespace Bookstore.Web.Controllers
         {
             try
             {
-                // Build the SQL command
-                string sql = @"DECLARE @rowsAffected INT;EXEC @rowsAffected = [dbo].[uspDeleteAuthor] @BusinessEntityID;SELECT @rowsAffected;";
-
-                // Execute the SQL command and get the number of rows affected
-                var rowsAffected = await _context.Database.ExecuteSqlRawAsync(sql, new SqlParameter("@BusinessEntityID", businessEntityId));
-
-                return rowsAffected > 0;
+                var author = await _context.Author.FindAsync(businessEntityId);
+                if (author != null)
+                {
+                    _context.Author.Remove(author);
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                return false;
             }
             catch (Exception ex)
             {
-                // Log the error or handle it as needed
                 Console.WriteLine(ex.ToString());
                 return false;
             }
@@ -225,19 +218,21 @@ namespace Bookstore.Web.Controllers
         {
             try
             {
-                // Build the SQL command
-                string sql = @"SELECT BusinessEntityID, FORMAT(ModifiedDate, 'yyyy-MM-dd HH:mm:ss') AS FormattedModifiedDate, DATEDIFF(YEAR, BirthDate, GETDATE()) AS Age FROM Author WHERE DATEPART(YEAR, HireDate) = @HireDate;";
-
-                // Execute the SQL command and get the number of rows affected
-                var results = await _context.Database.SqlQueryRaw<AuthorAgeResult>(sql, new SqlParameter("@HireDate", hireYear)).ToListAsync();
-
+                var results = await _context.Author
+                    .Where(a => a.HireDate.Year == hireYear)
+                    .Select(a => new AuthorAgeResult
+                    {
+                        BusinessEntityID = a.BusinessEntityID,
+                        FormattedModifiedDate = a.ModifiedDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                        Age = DateTime.Now.Year - a.BirthDate.Year
+                    })
+                    .ToListAsync();
                 return results;
             }
             catch (Exception ex)
             {
-                // Log the error or handle it as needed
                 Console.WriteLine(ex.ToString());
-                return null;
+                return new List<AuthorAgeResult>();
             }
         }
 

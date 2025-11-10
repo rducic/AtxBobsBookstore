@@ -89,7 +89,7 @@ namespace Bookstore.Web.Startup
                     PropertyNameCaseInsensitive = true
                 });
 
-                connString = $"Host={dbSecrets.Host};Port={dbSecrets.Port};Database=BobsUsedBookStore;Username={dbSecrets.Username};Password={dbSecrets.Password}";
+                connString = $"Host={dbSecrets.Host};Port={dbSecrets.Port};Database=postgres;Username={dbSecrets.Username};Password={dbSecrets.Password}";
             }
             catch (AmazonSecretsManagerException e)
             {
