@@ -68,6 +68,10 @@ namespace Bookstore.Data
 
             modelBuilder.Entity<Order>().HasOne(x => x.Customer).WithMany().OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<ShoppingCartItem>()
+                .Property(e => e.WantToBuy)
+                .HasConversion<int>();
+
             PopulateDatabase(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
